@@ -23,10 +23,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 
 /* ── Ensure logs/ directory exists ── */
-const logsDir = path.join(__dirname, "../../logs");
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
-}
+const isVercel = Boolean(process.env.VERCEL);
 
 /* ─────────────────────────────────────────
    TRY TO USE WINSTON
@@ -71,8 +68,12 @@ try {
     }),
   ];
 
-  /* In production also write to log files */
-  if (isProd) {
+  /* In production also write to log files when the filesystem allows it.
+     Vercel serverless functions can only write to /tmp, so use console there. */
+  if (isProd && !isVercel) {
+    const logsDir = path.join(__dirname, "../../logs");
+    fs.mkdirSync(logsDir, { recursive: true });
+
     transports.push(
       new winston.transports.File({
         filename: path.join(logsDir, "error.log"),
