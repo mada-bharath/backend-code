@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BharathVidya Learner</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-mark">BV</span>
+          <div>
+            <strong>BharathVidya</strong>
+            <small>Learner Portal</small>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="Primary">
+          <button class="nav-item active" type="button" data-view="coursesView">My Courses</button>
+          <button class="nav-item" type="button" data-view="playerView">Course Player</button>
+          <button class="nav-item" type="button" data-view="accountView">My Account</button>
+        </nav>
+
+        <div class="session-panel">
+          <span id="sessionName">Signed out</span>
+          <button class="ghost-button" id="logoutButton" type="button">Logout</button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <section class="view active" id="authView" aria-label="Login">
+          <form class="auth-panel" id="loginForm">
+            <h1>Welcome back</h1>
+            <label>
+              Email
+              <input id="emailInput" autocomplete="email" type="email" required>
+            </label>
+            <label>
+              Password
+              <input id="passwordInput" autocomplete="current-password" type="password" required>
+            </label>
+            <button class="primary-button" type="submit">Login</button>
+            <p class="status-line" id="authStatus"></p>
+          </form>
+        </section>
+
+        <section class="view" id="coursesView" aria-label="My Courses">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Courses</p>
+              <h1>My Courses</h1>
+            </div>
+            <form class="inline-form" id="courseIdForm">
+              <input id="courseIdInput" placeholder="Course ID" aria-label="Course ID">
+              <button class="secondary-button" type="submit">Open</button>
+            </form>
+          </div>
+          <div class="course-grid" id="courseGrid"></div>
+        </section>
+
+        <section class="view" id="playerView" aria-label="Course Player">
+          <div class="player-topbar">
+            <div>
+              <p class="eyebrow" id="courseTutor">Tutor</p>
+              <h1 id="courseTitle">Course Player</h1>
+            </div>
+            <div class="course-progress">
+              <span id="courseProgressLabel">0%</span>
+              <div class="meter"><span id="courseProgressBar"></span></div>
+            </div>
+          </div>
+
+          <div class="player-layout">
+            <section class="lesson-stage" aria-label="Lesson">
+              <div class="media-frame" id="mediaFrame">
+                <video id="lessonVideo" playsinline></video>
+                <iframe id="materialFrame" title="Study material preview"></iframe>
+                <div class="empty-state" id="emptyState">Select a lesson</div>
+              </div>
+
+              <div class="control-bar">
+                <button class="icon-button" id="playButton" type="button">Play</button>
+                <button class="icon-button" id="muteButton" type="button">Sound</button>
+                <select id="qualitySelect" aria-label="Clarity">
+                  <option value="auto">Auto</option>
+                  <option value="1080p">1080p</option>
+                  <option value="720p">720p</option>
+                  <option value="480p">480p</option>
+                </select>
+                <select id="languageSelect" aria-label="Language">
+                  <option value="en">English</option>
+                  <option value="hi">Hindi</option>
+                  <option value="te">Telugu</option>
+                  <option value="ta">Tamil</option>
+                </select>
+                <button class="icon-button" id="fullscreenButton" type="button">Full</button>
+              </div>
+
+              <div class="lesson-actions">
+                <button class="secondary-button" id="previousButton" type="button">Previous</button>
+                <button class="secondary-button" id="downloadAttachmentButton" type="button">Download Attachment</button>
+                <button class="primary-button" id="completeButton" type="button">Completed</button>
+                <button class="secondary-button" id="nextButton" type="button">Next</button>
+              </div>
+            </section>
+
+            <aside class="content-panel" aria-label="Modules">
+              <div class="tabs">
+                <button class="tab active" type="button" data-panel="modulesPanel">Modules</button>
+                <button class="tab" type="button" data-panel="materialsPanel">Study Materials</button>
+              </div>
+              <div class="tab-panel active" id="modulesPanel"></div>
+              <div class="tab-panel" id="materialsPanel">
+                <div class="material-toolbar">
+                  <button class="ghost-button" id="zoomOutButton" type="button">Zoom Out</button>
+                  <span id="pageLabel">Page</span>
+                  <button class="ghost-button" id="zoomInButton" type="button">Zoom In</button>
+                  <button class="ghost-button" id="printButton" type="button">Print</button>
+                  <button class="ghost-button" id="materialFullscreenButton" type="button">Full</button>
+                </div>
+                <div id="materialsList"></div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="accountView" aria-label="My Account">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Account</p>
+              <h1>My Account</h1>
+            </div>
+          </div>
+
+          <div class="account-tabs">
+            <button class="tab active" type="button" data-panel="overviewPanel">Overview</button>
+            <button class="tab" type="button" data-panel="billingPanel">Billing</button>
+            <button class="tab" type="button" data-panel="passwordPanel">Change Password</button>
+          </div>
+
+          <div class="tab-panel active" id="overviewPanel">
+            <form class="account-form" id="profileForm">
+              <label>
+                Name
+                <input id="profileName" type="text">
+              </label>
+              <label>
+                Email
+                <input id="profileEmail" type="email">
+              </label>
+              <label>
+                Phone
+                <input id="profilePhone" type="tel">
+              </label>
+              <label>
+                Bio
+                <textarea id="profileBio" rows="3"></textarea>
+              </label>
+              <button class="primary-button" type="submit">Save Profile</button>
+            </form>
+          </div>
+
+          <div class="tab-panel" id="billingPanel">
+            <div class="billing-list" id="billingList"></div>
+          </div>
+
+          <div class="tab-panel" id="passwordPanel">
+            <form class="account-form" id="passwordForm">
+              <label>
+                Current Password
+                <input id="currentPassword" autocomplete="current-password" type="password" required>
+              </label>
+              <label>
+                New Password
+                <input id="newPassword" autocomplete="new-password" type="password" minlength="6" required>
+              </label>
+              <button class="primary-button" type="submit">Update Password</button>
+            </form>
+          </div>
+
+          <p class="status-line" id="accountStatus"></p>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

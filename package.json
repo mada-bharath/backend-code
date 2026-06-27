@@ -1,0 +1,46 @@
+{
+  "name": "bharathvidya-backend",
+  "version": "1.0.0",
+  "description": "LMS Backend",
+  "main": "core/server.js",
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/free-port.cjs 5000",
+    "dev": "nodemon core/server.js",
+    "start": "node core/server.js",
+    "s3:cors": "node scripts/configure-s3-cors.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1029.0",
+    "@aws-sdk/client-sns": "^3.1029.0",
+    "@aws-sdk/s3-request-presigner": "^3.1041.0",
+    "bcryptjs": "^3.0.3",
+    "bullmq": "^5.73.0",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "crypto": "^1.0.1",
+    "dotenv": "^17.4.0",
+    "express": "^5.2.1",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^8.3.2",
+    "express-validator": "^7.3.2",
+    "helmet": "^8.1.0",
+    "ioredis": "^5.10.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.3.3",
+    "morgan": "^1.10.1",
+    "multer": "^2.1.1",
+    "multer-s3": "^3.0.1",
+    "razorpay": "^2.9.6",
+    "socket.io": "^4.8.3",
+    "uuid": "^14.0.0",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
