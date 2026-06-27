@@ -40,11 +40,20 @@ import { fileURLToPath } from "url";
 ───────────────────────────────────────── */
 const __filename  = fileURLToPath(import.meta.url);
 const __dirname   = path.dirname(__filename);
-const UPLOADS_DIR = path.join(process.cwd(), "uploads"); // always relative to project root
+const IS_VERCEL   = Boolean(process.env.VERCEL);
+const UPLOADS_DIR = IS_VERCEL
+  ? path.join("/tmp", "uploads")
+  : path.join(process.cwd(), "uploads");
 
 /* Creates a directory if it doesn't exist */
 const ensureDir = (dir) => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  try {
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    return true;
+  } catch (error) {
+    console.warn(`[Upload] Could not create upload directory ${dir}: ${error.message}`);
+    return false;
+  }
 };
 
 /* Pre-create common upload subdirectories */
@@ -101,7 +110,10 @@ const localDiskStorage = (subDir) =>
   multer.diskStorage({
     destination: (req, file, cb) => {
       const dir = path.join(UPLOADS_DIR, subDir);
-      ensureDir(dir);
+      if (!ensureDir(dir)) {
+        cb(new Error("Upload storage is not writable. Configure S3 for production uploads."));
+        return;
+      }
       cb(null, dir);
     },
     filename: (req, file, cb) => {
