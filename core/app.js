@@ -255,6 +255,11 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use("/uploads", express.static("uploads"));
 app.use("/learner", express.static(FRONTEND_DIR));
+app.use(express.static(FRONTEND_DIR, { index: false }));
+
+const sendLearnerApp = (req, res) => {
+  res.sendFile(path.join(FRONTEND_DIR, "index.html"));
+};
 
 /* ─────────────────────────────────────────
    🍪 COOKIE PARSER
@@ -318,16 +323,12 @@ app.get("/health", (req, res) => {
   });
 });
 
-app.get("/", (req, res) => {
-  res.status(200).json({ success: true, message: "🚀 BharathVidya API Running" });
-});
+app.get("/", sendLearnerApp);
 
 /* ─────────────────────────────────────────
    🛣️ API ROUTES
 ───────────────────────────────────────── */
-app.get("/learner", (req, res) => {
-  res.sendFile(path.join(FRONTEND_DIR, "index.html"));
-});
+app.get(["/learner", "/login", "/relogin"], sendLearnerApp);
 
 app.use("/api/auth",          authRoutes);
 app.use("/api/users",         userRoutes);

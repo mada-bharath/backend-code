@@ -98,6 +98,12 @@ function setStatus(element, message, success = false) {
   element.classList.toggle("success", Boolean(success));
 }
 
+function setAppPath(path) {
+  if (window.location.pathname !== path) {
+    window.history.replaceState({}, "", path);
+  }
+}
+
 async function api(path, options = {}) {
   const headers = {
     "Content-Type": "application/json",
@@ -185,6 +191,7 @@ async function loadSession() {
     hydrateUser(me.user || me.data);
     await loadCourses();
     renderBilling();
+    setAppPath("/learner");
     showView("coursesView");
   } catch (error) {
     localStorage.removeItem("bv_token");
@@ -440,6 +447,7 @@ els.loginForm.addEventListener("submit", async (event) => {
     hydrateUser(response.user);
     await loadCourses();
     renderBilling();
+    setAppPath("/learner");
     showView("coursesView");
   } catch (error) {
     setStatus(els.authStatus, error.message);
@@ -453,6 +461,10 @@ els.logoutButton.addEventListener("click", () => {
   state.courses = [];
   state.courseData = null;
   els.lessonVideo.pause();
+  els.lessonVideo.removeAttribute("src");
+  els.lessonVideo.load();
+  setStatus(els.authStatus, "You have logged out. Sign in again when you are ready.", true);
+  setAppPath("/login");
   showView("authView");
 });
 

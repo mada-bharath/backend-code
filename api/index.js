@@ -85,13 +85,13 @@ export default async function handler(req, res) {
 
   const pathname = getPathname(req);
 
-  if (pathname === "/favicon.ico" || pathname === "/favicon.png") {
+  if (pathname === "/favicon.png") {
     res.statusCode = 204;
     res.end();
     return;
   }
 
-  if (pathname === "/" || pathname === "/health" || pathname === "/api/health") {
+  if (pathname === "/health" || pathname === "/api/health") {
     try {
       await connectDB();
     } catch (error) {
