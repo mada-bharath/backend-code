@@ -212,6 +212,8 @@ const splitOrigins = (...values) =>
 
 const allowedOrigins = new Set([
   ...splitOrigins(CLIENT_URL, ADMIN_URL, FRONTEND_URL, CORS_ORIGINS),
+  "https://bharathvidya.com",
+  "https://www.bharathvidya.com",
   "http://localhost:5173",
   "http://localhost:3000",
 ]);
