@@ -1,4 +1,13 @@
 const apiBase = (() => {
+  const configuredApi =
+    window.BHARATHVIDYA_API_URL ||
+    document.querySelector('meta[name="api-base"]')?.content ||
+    "";
+
+  if (configuredApi) {
+    return configuredApi.replace(/\/$/, "");
+  }
+
   if (window.location.origin?.startsWith("http")) {
     return `${window.location.origin}/api`;
   }

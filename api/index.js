@@ -33,6 +33,11 @@ const getPathname = (req) => {
 
 const getMissingEnv = () => REQUIRED_ENV.filter((key) => !process.env[key]);
 
+const getDatabaseState = () => ({
+  connected: mongoose.connection.readyState === 1,
+  readyState: mongoose.connection.readyState,
+});
+
 const loadApp = async () => {
   if (!appPromise) {
     appPromise = import("../core/app.js").then((mod) => mod.default);
@@ -86,12 +91,37 @@ export default async function handler(req, res) {
     return;
   }
 
-  if (pathname === "/" || pathname === "/health") {
+  if (pathname === "/" || pathname === "/health" || pathname === "/api/health") {
+    try {
+      await connectDB();
+    } catch (error) {
+      console.error("[Vercel database health error]", error);
+
+      const missingEnv = error.code === "ENV_MISSING";
+
+      json(res, missingEnv ? 500 : 503, {
+        success: false,
+        message: missingEnv
+          ? error.message
+          : "MongoDB is not connected. Check MongoDB Atlas network access and Vercel environment variables.",
+        environment: process.env.NODE_ENV || "production",
+        databaseConnected: false,
+        databaseReadyState: mongoose.connection.readyState,
+        missingEnvironmentVariables: getMissingEnv(),
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
+    const database = getDatabaseState();
+
     json(res, 200, {
       success: true,
       message: "BharathVidya API running on Vercel",
       environment: process.env.NODE_ENV || "production",
-      databaseConnected: mongoose.connection.readyState === 1,
+      databaseConnected: database.connected,
+      databaseReadyState: database.readyState,
       missingEnvironmentVariables: getMissingEnv(),
       timestamp: new Date().toISOString(),
     });

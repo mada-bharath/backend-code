@@ -182,6 +182,8 @@ try {
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 const NODE_ENV   = process.env.NODE_ENV   || "development";
 const ADMIN_URL  = process.env.ADMIN_URL  || "";
+const FRONTEND_URL = process.env.FRONTEND_URL || "";
+const CORS_ORIGINS = process.env.CORS_ORIGINS || "";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 const FRONTEND_DIR = path.resolve(__dirname, "../frontend");
@@ -202,17 +204,36 @@ app.use(helmet({
 /* ─────────────────────────────────────────
    🌐 CORS
 ───────────────────────────────────────── */
-const allowedOrigins = [
-  CLIENT_URL,
+const splitOrigins = (...values) =>
+  values
+    .flatMap((value) => String(value || "").split(","))
+    .map((value) => value.trim().replace(/\/$/, ""))
+    .filter(Boolean);
+
+const allowedOrigins = new Set([
+  ...splitOrigins(CLIENT_URL, ADMIN_URL, FRONTEND_URL, CORS_ORIGINS),
   "http://localhost:5173",
   "http://localhost:3000",
-  ADMIN_URL,
-].filter(Boolean);
+]);
+
+const isAllowedOrigin = (origin) => {
+  const normalizedOrigin = origin.replace(/\/$/, "");
+  if (allowedOrigins.has(normalizedOrigin)) return true;
+
+  if (!process.env.VERCEL_URL) return false;
+
+  try {
+    const { hostname } = new URL(normalizedOrigin);
+    return hostname === process.env.VERCEL_URL;
+  } catch {
+    return false;
+  }
+};
 
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (isAllowedOrigin(origin)) return callback(null, true);
     if (NODE_ENV !== "production") return callback(null, true);
     logger.warn(`🚫 CORS blocked: ${origin}`);
     callback(new Error(`CORS policy: origin ${origin} is not allowed`));

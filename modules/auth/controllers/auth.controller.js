@@ -8,7 +8,6 @@
  * ✔ Clean architecture
  */
 
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 import User from "../../user/models/user.js";
@@ -18,6 +17,16 @@ import { loginService } from "../services/auth.service.js";
 import { sendOtpService, verifyOtpService } from "../services/otp.service.js";
 
 import { generateOTP } from "../../../shared/utils/generateOTP.js";
+
+const toSafeUser = (user) => {
+  const safeUser = user.toObject ? user.toObject() : { ...user };
+  delete safeUser.password;
+  delete safeUser.otp;
+  delete safeUser.otpExpiry;
+  delete safeUser.resetPasswordToken;
+  delete safeUser.resetPasswordExpires;
+  return safeUser;
+};
 
 /* =========================================================
    🔐 SIGNUP
@@ -54,20 +63,18 @@ export const signup = async (req, res, next) => {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const user = await User.create({
       name,
       email,
       phone: phone || "",
-      password: hashedPassword,
+      password,
       role: "student",
     });
 
     return res.status(201).json({
       success: true,
       message: "Signup successful",
-      user,
+      user: toSafeUser(user),
     });
 
   } catch (error) {
@@ -320,9 +327,7 @@ export const resetPassword = async (req, res, next) => {
       });
     }
 
-    const hashed = await bcrypt.hash(password, 10);
-
-    user.password = hashed;
+    user.password = password;
     user.otp = null;
     user.otpExpiry = null;
 

@@ -22,11 +22,6 @@ export const loginService = async ({ email, password }) => {
     throw new Error("User password not found in DB");
   }
 
-  // ✅ debug (keep for now)
-  console.log("Entered password:", password);
-  console.log("DB password:", user.password);
-  console.log("USER ROLE FROM DB:", user.role);
-
   // ✅ compare password
   const isMatch = await bcrypt.compare(password, user.password);
 
