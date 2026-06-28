@@ -187,6 +187,139 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS || "";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 const FRONTEND_DIR = path.resolve(__dirname, "../frontend");
+const SITE_URL = (process.env.SITE_URL || FRONTEND_URL || "https://bharathvidya.com").replace(/\/$/, "");
+
+const publicPages = [
+  {
+    path: "/",
+    label: "Home",
+    title: "Bharath Vidya - Online Courses and Learner Portal",
+    description: "Learn programming, technology and career skills online with Bharath Vidya.",
+    heading: "Bharath Vidya",
+    eyebrow: "Online learning",
+    body: "Build practical skills through online courses, guided lessons, study materials, and a secure learner portal.",
+    actionLabel: "Login",
+    actionHref: "/login",
+  },
+  {
+    path: "/courses",
+    label: "Courses",
+    title: "Courses - Bharath Vidya",
+    description: "Explore Bharath Vidya courses and sign in to access your enrolled learning materials.",
+    heading: "Courses",
+    eyebrow: "Learn online",
+    body: "Browse Bharath Vidya course access and sign in to continue lessons, videos, materials, and progress tracking.",
+    actionLabel: "Go to Login",
+    actionHref: "/login",
+  },
+  {
+    path: "/login",
+    label: "Login",
+    title: "Login - Bharath Vidya",
+    description: "Login to the Bharath Vidya learner portal to access courses, videos, materials, and progress.",
+  },
+  {
+    path: "/contact",
+    label: "Contact",
+    title: "Contact - Bharath Vidya",
+    description: "Contact Bharath Vidya for course access, learner support, and account help.",
+    heading: "Contact Bharath Vidya",
+    eyebrow: "Support",
+    body: "Need help with course access or your learner account? Contact the Bharath Vidya team for support.",
+    actionLabel: "Login",
+    actionHref: "/login",
+  },
+  {
+    path: "/about",
+    label: "About",
+    title: "About - Bharath Vidya",
+    description: "Learn about Bharath Vidya, an online learning platform for technology and career skills.",
+    heading: "About Bharath Vidya",
+    eyebrow: "Our platform",
+    body: "Bharath Vidya helps learners access structured online courses, study materials, course videos, and progress tools.",
+    actionLabel: "View Courses",
+    actionHref: "/courses",
+  },
+];
+
+const escapeHtml = (value = "") =>
+  String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+const getCanonicalUrl = (pagePath) => `${SITE_URL}${pagePath === "/" ? "/" : pagePath}`;
+
+const renderPublicPage = (page) => {
+  const canonicalUrl = getCanonicalUrl(page.path);
+  const nav = publicPages
+    .map((item) => `<a href="${item.path}"${item.path === page.path ? ' aria-current="page"' : ""}>${escapeHtml(item.label)}</a>`)
+    .join("");
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${escapeHtml(page.title)}</title>
+    <meta name="description" content="${escapeHtml(page.description)}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="${canonicalUrl}">
+    <meta property="og:site_name" content="Bharath Vidya">
+    <meta property="og:title" content="${escapeHtml(page.title)}">
+    <meta property="og:description" content="${escapeHtml(page.description)}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="${canonicalUrl}">
+    <script type="application/ld+json">
+      ${JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "EducationalOrganization",
+        name: "Bharath Vidya",
+        url: SITE_URL,
+        description: "Bharath Vidya provides online courses, course videos, study materials, and learner progress tools.",
+      })}
+    </script>
+    <style>
+      :root { color-scheme: light; --ink: #172033; --muted: #5d6a7c; --line: #d9e1ea; --teal: #0f766e; --bg: #f6f8fb; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: var(--bg); }
+      header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px clamp(18px, 5vw, 72px); background: #fff; border-bottom: 1px solid var(--line); }
+      .brand { font-weight: 800; color: var(--ink); text-decoration: none; }
+      nav { display: flex; flex-wrap: wrap; gap: 12px; }
+      nav a { color: var(--muted); text-decoration: none; font-weight: 700; }
+      nav a[aria-current="page"], nav a:hover { color: var(--teal); }
+      main { min-height: calc(100vh - 77px); display: grid; align-items: center; padding: 52px clamp(18px, 6vw, 96px); }
+      section { max-width: 760px; }
+      p.eyebrow { color: var(--teal); font-size: 0.82rem; font-weight: 800; text-transform: uppercase; margin: 0 0 10px; }
+      h1 { margin: 0; font-size: clamp(2.2rem, 7vw, 4.9rem); line-height: 1; letter-spacing: 0; }
+      p.body { margin: 22px 0 0; color: var(--muted); font-size: clamp(1rem, 2vw, 1.25rem); line-height: 1.65; max-width: 640px; }
+      .actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 30px; }
+      .button { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 18px; border-radius: 8px; background: var(--teal); color: #fff; text-decoration: none; font-weight: 800; }
+      .button.secondary { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+      @media (max-width: 680px) { header { align-items: flex-start; flex-direction: column; } main { align-items: start; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="/">Bharath Vidya</a>
+      <nav aria-label="Primary">${nav}</nav>
+    </header>
+    <main>
+      <section>
+        <p class="eyebrow">${escapeHtml(page.eyebrow)}</p>
+        <h1>${escapeHtml(page.heading)}</h1>
+        <p class="body">${escapeHtml(page.body)}</p>
+        <div class="actions">
+          <a class="button" href="${page.actionHref}">${escapeHtml(page.actionLabel)}</a>
+          <a class="button secondary" href="/courses">Courses</a>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>`;
+};
 
 /* ═══════════════════════════════════════
    🚀 CREATE APP
@@ -255,11 +388,6 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use("/uploads", express.static("uploads"));
 app.use("/learner", express.static(FRONTEND_DIR));
-app.use(express.static(FRONTEND_DIR, { index: false }));
-
-const sendLearnerApp = (req, res) => {
-  res.sendFile(path.join(FRONTEND_DIR, "index.html"));
-};
 
 /* ─────────────────────────────────────────
    🍪 COOKIE PARSER
@@ -323,12 +451,47 @@ app.get("/health", (req, res) => {
   });
 });
 
-app.get("/", sendLearnerApp);
+app.get("/robots.txt", (req, res) => {
+  res
+    .type("text/plain")
+    .send(`User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`);
+});
+
+app.get("/sitemap.xml", (req, res) => {
+  const lastModified = new Date().toISOString();
+  const urls = publicPages
+    .map((page) => `  <url>
+    <loc>${getCanonicalUrl(page.path)}</loc>
+    <lastmod>${lastModified}</lastmod>
+  </url>`)
+    .join("\n");
+
+  res
+    .type("application/xml")
+    .send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`);
+});
+
+const sendLearnerApp = (req, res) => {
+  res.sendFile(path.join(FRONTEND_DIR, "index.html"));
+};
+
+app.get(["/login", "/learner"], sendLearnerApp);
+
+for (const page of publicPages.filter((page) => page.path !== "/login")) {
+  app.get(page.path, (req, res) => {
+    res.type("html").send(renderPublicPage(page));
+  });
+}
 
 /* ─────────────────────────────────────────
    🛣️ API ROUTES
 ───────────────────────────────────────── */
-app.get(["/learner", "/login", "/relogin"], sendLearnerApp);
+app.get("/api", (req, res) => {
+  res.status(200).json({ success: true, message: "BharathVidya API Running" });
+});
 
 app.use("/api/auth",          authRoutes);
 app.use("/api/users",         userRoutes);

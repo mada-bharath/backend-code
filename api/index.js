@@ -85,7 +85,7 @@ export default async function handler(req, res) {
 
   const pathname = getPathname(req);
 
-  if (pathname === "/favicon.png") {
+  if (pathname === "/favicon.ico" || pathname === "/favicon.png") {
     res.statusCode = 204;
     res.end();
     return;

@@ -76,6 +76,25 @@ button {
   gap: 8px;
 }
 
+.site-links {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid #263445;
+  padding-top: 18px;
+}
+
+.site-links a {
+  color: #b8c4d4;
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.site-links a:hover,
+.site-links a[aria-current="page"] {
+  color: #fff;
+}
+
 .nav-item {
   border: 1px solid transparent;
   border-radius: 8px;
