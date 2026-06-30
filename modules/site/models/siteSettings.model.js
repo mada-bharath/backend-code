@@ -62,10 +62,10 @@ export const defaultSiteSettings = {
   phones: [],
   resources: [
     { label: "Courses", href: "/courses" },
-    { label: "My Courses", href: "/learner" },
-    { label: "Discussion", href: "/learner#discussion" },
-    { label: "Wishlist", href: "/learner#wishlist" },
-    { label: "Level Up", href: "/learner#level-up" },
+    { label: "My Courses", href: "/my-courses" },
+    { label: "Discussion", href: "/discussion" },
+    { label: "Wishlist", href: "/wishlist" },
+    { label: "Level Up", href: "/levelup" },
   ],
   supportLinks: [
     { label: "Contact Us", href: "/contact" },

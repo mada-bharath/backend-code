@@ -7,15 +7,6 @@ setDefaultResultOrder("ipv4first");
 
 const REQUIRED_ENV = ["MONGO_URI", "JWT_SECRET"];
 const DB_TIMEOUT_MS = Number(process.env.DB_CONNECT_TIMEOUT_MS || 5000);
-const DB_BACKED_PUBLIC_PATHS = new Set([
-  "/",
-  "/courses",
-  "/contact",
-  "/about",
-  "/terms-and-conditions",
-  "/refund-and-return-policy",
-  "/privacy-policy",
-]);
 
 let connectionPromise = null;
 let appPromise = null;
@@ -138,7 +129,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    if (pathname.startsWith("/api") || DB_BACKED_PUBLIC_PATHS.has(pathname)) {
+    if (pathname.startsWith("/api")) {
       await connectDB();
     }
 

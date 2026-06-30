@@ -10,8 +10,7 @@
           "modules/**",
           "shared/**",
           "infrastructure/**",
-          "transactions/**",
-          "frontend/**"
+          "transactions/**"
         ]
       }
     }
