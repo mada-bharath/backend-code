@@ -129,12 +129,14 @@ const els = {
 };
 
 const footerViews = new Set([
+  "authView",
   "coursesView",
   "playerView",
   "discussionView",
   "wishlistView",
   "levelUpView",
   "accountView",
+  "policyView",
 ]);
 
 const policyLinks = {
@@ -320,13 +322,13 @@ function showView(viewId) {
 
   if (!state.token && viewId !== "authView" && viewId !== "policyView") {
     els.authView.classList.add("active");
-    els.siteFooter.classList.add("hidden");
+    els.siteFooter.classList.toggle("hidden", !footerViews.has("authView"));
     return;
   }
 
   const target = $(`#${viewId}`) || els.authView;
   target.classList.add("active");
-  els.siteFooter.classList.toggle("hidden", !state.token || !footerViews.has(viewId));
+  els.siteFooter.classList.toggle("hidden", !footerViews.has(viewId));
 }
 
 async function handleView(viewId) {

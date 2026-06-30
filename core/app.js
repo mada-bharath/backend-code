@@ -287,6 +287,64 @@ const renderTextBlocks = (text = "") => {
     .join("");
 };
 
+const renderPublicFooterLink = (link = {}) =>
+  `<a href="${escapeHtml(link.href || "#")}">${escapeHtml(link.label || "")}</a>`;
+
+const renderPublicFooter = (settings = {}) => {
+  const resources = settings.resources?.length ? settings.resources : [
+    { label: "Courses", href: "/courses" },
+    { label: "My Courses", href: "/learner" },
+    { label: "Discussion", href: "/learner#discussion" },
+    { label: "Wishlist", href: "/learner#wishlist" },
+    { label: "Level Up", href: "/learner#level-up" },
+  ];
+  const supportLinks = settings.supportLinks?.length ? settings.supportLinks : [
+    { label: "Contact Us", href: "/contact" },
+    { label: "Terms and Conditions", href: "/terms-and-conditions" },
+    { label: "Refund and Return Policy", href: "/refund-and-return-policy" },
+    { label: "Privacy Policy", href: "/privacy-policy" },
+  ];
+  const emails = (settings.emails || []).map((email) =>
+    `<a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a>`
+  );
+  const phones = (settings.phones || []).map((phone) =>
+    `<a href="tel:${escapeHtml(phone)}">${escapeHtml(phone)}</a>`
+  );
+
+  return `<footer class="public-footer" aria-label="Footer">
+    <div>
+      <h2>${escapeHtml(settings.brandName || "Bharath Vidya")}</h2>
+      <p>${escapeHtml(settings.footerDescription || "Bharath Vidya provides practical online courses and learning support.")}</p>
+    </div>
+    <div>
+      <h3>Resources</h3>
+      <nav>${resources.map(renderPublicFooterLink).join("")}</nav>
+    </div>
+    <div>
+      <h3>Support</h3>
+      <nav>${supportLinks.map(renderPublicFooterLink).join("")}</nav>
+    </div>
+    <div>
+      <h3>Contact</h3>
+      <nav>${[...emails, ...phones].join("") || "<span>Contact details will be updated soon.</span>"}</nav>
+    </div>
+  </footer>`;
+};
+
+const publicFooterStyles = `
+      .public-footer { margin: 18px clamp(18px, 5vw, 72px) 22px; background: #111827; color: #f8fafc; border-radius: 8px; padding: 18px; display: grid; grid-template-columns: minmax(220px, 1.4fr) minmax(120px, 0.7fr) minmax(170px, 0.9fr) minmax(170px, 0.9fr); gap: 18px; align-items: start; }
+      .public-footer h2, .public-footer h3 { margin: 0; letter-spacing: 0; }
+      .public-footer h2 { font-size: 1rem; }
+      .public-footer h3 { font-size: 0.82rem; text-transform: uppercase; color: #c9d6e7; }
+      .public-footer p, .public-footer a, .public-footer span { color: #c9d6e7; font-size: 0.88rem; line-height: 1.5; }
+      .public-footer p { margin: 8px 0 0; }
+      .public-footer nav { display: grid; gap: 7px; margin-top: 10px; }
+      .public-footer a { text-decoration: none; }
+      .public-footer a:hover { color: #fff; }
+      @media (max-width: 900px) { .public-footer { grid-template-columns: 1fr 1fr; } }
+      @media (max-width: 620px) { .public-footer { grid-template-columns: 1fr; } }
+`;
+
 const renderContentPage = ({
   pagePath,
   title,
@@ -294,6 +352,7 @@ const renderContentPage = ({
   eyebrow,
   heading,
   bodyHtml,
+  footerSettings,
 }) => {
   const canonicalUrl = getCanonicalUrl(pagePath);
   const nav = publicPages
@@ -327,6 +386,7 @@ const renderContentPage = ({
       .body p:last-child { margin-bottom: 0; }
       .contact-list { display: grid; gap: 10px; margin-top: 18px; }
       .contact-list a, .contact-list span { color: var(--ink); font-weight: 800; }
+${publicFooterStyles}
       @media (max-width: 680px) { header { align-items: flex-start; flex-direction: column; } }
     </style>
   </head>
@@ -342,11 +402,12 @@ const renderContentPage = ({
         <div class="body">${bodyHtml}</div>
       </article>
     </main>
+    ${renderPublicFooter(footerSettings)}
   </body>
 </html>`;
 };
 
-const renderPublicPage = (page) => {
+const renderPublicPage = (page, footerSettings) => {
   const canonicalUrl = getCanonicalUrl(page.path);
   const nav = publicPages
     .map((item) => `<a href="${item.path}"${item.path === page.path ? ' aria-current="page"' : ""}>${escapeHtml(item.label)}</a>`)
@@ -384,7 +445,7 @@ const renderPublicPage = (page) => {
       nav { display: flex; flex-wrap: wrap; gap: 12px; }
       nav a { color: var(--muted); text-decoration: none; font-weight: 700; }
       nav a[aria-current="page"], nav a:hover { color: var(--teal); }
-      main { min-height: calc(100vh - 77px); display: grid; align-items: center; padding: 52px clamp(18px, 6vw, 96px); }
+      main { min-height: calc(100vh - 220px); display: grid; align-items: center; padding: 52px clamp(18px, 6vw, 96px) 34px; }
       section { max-width: 760px; }
       p.eyebrow { color: var(--teal); font-size: 0.82rem; font-weight: 800; text-transform: uppercase; margin: 0 0 10px; }
       h1 { margin: 0; font-size: clamp(2.2rem, 7vw, 4.9rem); line-height: 1; letter-spacing: 0; }
@@ -392,6 +453,7 @@ const renderPublicPage = (page) => {
       .actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 30px; }
       .button { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 18px; border-radius: 8px; background: var(--teal); color: #fff; text-decoration: none; font-weight: 800; }
       .button.secondary { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+${publicFooterStyles}
       @media (max-width: 680px) { header { align-items: flex-start; flex-direction: column; } main { align-items: start; } }
     </style>
   </head>
@@ -411,6 +473,7 @@ const renderPublicPage = (page) => {
         </div>
       </section>
     </main>
+    ${renderPublicFooter(footerSettings)}
   </body>
 </html>`;
 };
@@ -598,6 +661,7 @@ app.get("/contact", async (req, res, next) => {
         <p>${escapeHtml(settings.footerDescription || "Contact Bharath Vidya for learner support.")}</p>
         ${contactRows || "<p>Contact details will be updated by the Bharath Vidya admin.</p>"}
       `,
+      footerSettings: settings,
     }));
   } catch (error) {
     next(error);
@@ -617,6 +681,7 @@ for (const page of legalPages) {
         eyebrow: "Policy",
         heading: policy.title || page.title.replace(" - Bharath Vidya", ""),
         bodyHtml: renderTextBlocks(policy.content),
+        footerSettings: settings,
       }));
     } catch (error) {
       next(error);
@@ -625,8 +690,13 @@ for (const page of legalPages) {
 }
 
 for (const page of publicPages.filter((page) => page.path !== "/login" && page.path !== "/contact")) {
-  app.get(page.path, (req, res) => {
-    res.type("html").send(renderPublicPage(page));
+  app.get(page.path, async (req, res, next) => {
+    try {
+      const settings = await getSiteSettingsDocument();
+      res.type("html").send(renderPublicPage(page, settings));
+    } catch (error) {
+      next(error);
+    }
   });
 }
 
