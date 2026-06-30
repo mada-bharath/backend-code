@@ -82,6 +82,11 @@ import {
   deleteOldNotifications,
 } from "../controllers/admin.controller.js";
 
+import {
+  getAdminSiteSettings,
+  updateAdminSiteSettings,
+} from "../../site/controllers/siteSettings.controller.js";
+
 /* --- VERSION B (split controllers) ---
 import { getAdminStats }          from "../controllers/dashboard.admin.controller.js";
 import { deleteVideo } from "../controllers/course.admin.controller.js";
@@ -185,6 +190,9 @@ router.get("/admin-access/options",    requireAdminPage("admin-access"), getAdmi
 router.get("/admin-access/users",      requireAdminPage("admin-access"), getAdminAccessUsers);
 router.put("/admin-access/users/:id",  requireAdminPage("admin-access"), updateAdminAccess);
 router.delete("/admin-access/users/:id", requireAdminPage("admin-access"), revokeAdminAccess);
+
+router.get("/site-settings", requireAdminPage("site-settings"), getAdminSiteSettings);
+router.put("/site-settings", requireAdminPage("site-settings"), updateAdminSiteSettings);
 
 /* ═══════════════════════════════════════════════
    FREE ACCESS MANAGEMENT

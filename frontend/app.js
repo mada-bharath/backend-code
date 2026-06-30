@@ -14,6 +14,32 @@ const apiBase = (() => {
   return "http://localhost:5000/api";
 })();
 
+const defaultSiteSettings = {
+  brandName: "Bharath Vidya",
+  footerDescription:
+    "Bharath Vidya provides practical online courses and learning support for students, beginners, and working professionals.",
+  emails: [],
+  phones: [],
+  resources: [
+    { label: "Courses", href: "/courses" },
+    { label: "My Courses", href: "/learner", view: "coursesView" },
+    { label: "Discussion", href: "/learner#discussion", view: "discussionView" },
+    { label: "Wishlist", href: "/learner#wishlist", view: "wishlistView" },
+    { label: "Level Up", href: "/learner#level-up", view: "levelUpView" },
+  ],
+  supportLinks: [
+    { label: "Contact Us", href: "/contact" },
+    { label: "Terms and Conditions", href: "/terms-and-conditions", policy: "terms" },
+    { label: "Refund and Return Policy", href: "/refund-and-return-policy", policy: "refund" },
+    { label: "Privacy Policy", href: "/privacy-policy", policy: "privacy" },
+  ],
+  policies: {
+    terms: { title: "Terms and Conditions", content: "" },
+    privacy: { title: "Privacy Policy", content: "" },
+    refund: { title: "Refund and Return Policy", content: "" },
+  },
+};
+
 const state = {
   token: localStorage.getItem("bv_token") || "",
   user: null,
@@ -24,6 +50,7 @@ const state = {
   activeMaterial: null,
   materialZoom: 100,
   lastSaveAt: 0,
+  siteSettings: defaultSiteSettings,
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -34,10 +61,20 @@ const els = {
   coursesView: $("#coursesView"),
   playerView: $("#playerView"),
   accountView: $("#accountView"),
+  policyView: $("#policyView"),
   loginForm: $("#loginForm"),
+  signupForm: $("#signupForm"),
+  showSignupButton: $("#showSignupButton"),
+  showLoginButton: $("#showLoginButton"),
+  signupName: $("#signupName"),
+  signupEmail: $("#signupEmail"),
+  signupPhone: $("#signupPhone"),
+  signupPassword: $("#signupPassword"),
+  acceptedPolicies: $("#acceptedPolicies"),
   authStatus: $("#authStatus"),
   sessionName: $("#sessionName"),
   logoutButton: $("#logoutButton"),
+  adminSettingsNav: $("#adminSettingsNav"),
   courseGrid: $("#courseGrid"),
   courseIdForm: $("#courseIdForm"),
   courseIdInput: $("#courseIdInput"),
@@ -75,6 +112,35 @@ const els = {
   newPassword: $("#newPassword"),
   billingList: $("#billingList"),
   accountStatus: $("#accountStatus"),
+  discussionList: $("#discussionList"),
+  wishlistGrid: $("#wishlistGrid"),
+  levelUpGrid: $("#levelUpGrid"),
+  policyTitle: $("#policyTitle"),
+  policyContent: $("#policyContent"),
+  siteFooter: $("#siteFooter"),
+  siteSettingsForm: $("#siteSettingsForm"),
+  footerDescriptionInput: $("#footerDescriptionInput"),
+  footerEmailsInput: $("#footerEmailsInput"),
+  footerPhonesInput: $("#footerPhonesInput"),
+  termsPolicyInput: $("#termsPolicyInput"),
+  privacyPolicyInput: $("#privacyPolicyInput"),
+  refundPolicyInput: $("#refundPolicyInput"),
+  settingsStatus: $("#settingsStatus"),
+};
+
+const footerViews = new Set([
+  "coursesView",
+  "playerView",
+  "discussionView",
+  "wishlistView",
+  "levelUpView",
+  "accountView",
+]);
+
+const policyLinks = {
+  terms: "/terms-and-conditions",
+  privacy: "/privacy-policy",
+  refund: "/refund-and-return-policy",
 };
 
 function escapeHtml(value = "") {
@@ -94,6 +160,7 @@ function formatSeconds(seconds = 0) {
 }
 
 function setStatus(element, message, success = false) {
+  if (!element) return;
   element.textContent = message || "";
   element.classList.toggle("success", Boolean(success));
 }
@@ -102,6 +169,46 @@ function setAppPath(path) {
   if (window.location.pathname !== path) {
     window.history.replaceState({}, "", path);
   }
+}
+
+function viewFromHash() {
+  const hash = window.location.hash.replace("#", "");
+  const views = {
+    discussion: "discussionView",
+    wishlist: "wishlistView",
+    "level-up": "levelUpView",
+  };
+  return views[hash] || "";
+}
+
+function toLines(value = "") {
+  return String(value || "")
+    .split(/\r?\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function renderPolicyText(text = "") {
+  const blocks = String(text || "")
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  if (!blocks.length) {
+    return "<p>This policy will be updated by the admin.</p>";
+  }
+
+  return blocks
+    .map((block) => `<p>${escapeHtml(block).replace(/\n/g, "<br>")}</p>`)
+    .join("");
+}
+
+function canManageSiteSettings(user) {
+  if (!user || user.role !== "admin") return false;
+  const access = user.adminAccess || {};
+  if (access.managed !== true) return true;
+  if (access.fullAccess === true) return true;
+  return Array.isArray(access.pages) && access.pages.includes("site-settings");
 }
 
 async function api(path, options = {}) {
@@ -126,18 +233,115 @@ async function api(path, options = {}) {
   return data;
 }
 
+function normalizeSiteSettings(settings = {}) {
+  return {
+    ...defaultSiteSettings,
+    ...settings,
+    resources: settings.resources?.length ? settings.resources : defaultSiteSettings.resources,
+    supportLinks: settings.supportLinks?.length
+      ? settings.supportLinks
+      : defaultSiteSettings.supportLinks,
+    policies: {
+      ...defaultSiteSettings.policies,
+      ...(settings.policies || {}),
+    },
+  };
+}
+
+function footerLinkMarkup(link) {
+  const href = link.href || "#";
+  const policy = Object.entries(policyLinks).find(([, path]) => path === href)?.[0] || link.policy;
+  const viewByHref = {
+    "/learner": "coursesView",
+    "/learner#discussion": "discussionView",
+    "/learner#wishlist": "wishlistView",
+    "/learner#level-up": "levelUpView",
+  };
+  const view = link.view || viewByHref[href];
+  const attrs = [
+    `href="${escapeHtml(href)}"`,
+    policy ? `data-policy-link="${escapeHtml(policy)}"` : "",
+    view ? `data-footer-view="${escapeHtml(view)}"` : "",
+  ].filter(Boolean).join(" ");
+
+  return `<a ${attrs}>${escapeHtml(link.label)}</a>`;
+}
+
+function renderFooter() {
+  const settings = state.siteSettings || defaultSiteSettings;
+  const emails = (settings.emails || []).map((email) =>
+    `<a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a>`
+  );
+  const phones = (settings.phones || []).map((phone) =>
+    `<a href="tel:${escapeHtml(phone)}">${escapeHtml(phone)}</a>`
+  );
+
+  els.siteFooter.innerHTML = `
+    <div>
+      <h2>${escapeHtml(settings.brandName || "Bharath Vidya")}</h2>
+      <p>${escapeHtml(settings.footerDescription || "")}</p>
+    </div>
+    <div>
+      <h3>Resources</h3>
+      <div class="footer-links">
+        ${(settings.resources || []).map(footerLinkMarkup).join("")}
+      </div>
+    </div>
+    <div>
+      <h3>Support</h3>
+      <div class="footer-links">
+        ${(settings.supportLinks || []).map(footerLinkMarkup).join("")}
+      </div>
+    </div>
+    <div>
+      <h3>Contact</h3>
+      <div class="footer-contact">
+        ${[...emails, ...phones].join("") || "<span>Contact details will be updated soon.</span>"}
+      </div>
+    </div>
+  `;
+}
+
+async function loadSiteSettings() {
+  try {
+    const response = await api("/site-settings");
+    state.siteSettings = normalizeSiteSettings(response.data);
+  } catch {
+    state.siteSettings = defaultSiteSettings;
+  }
+  renderFooter();
+}
+
 function showView(viewId) {
   $$(".view").forEach((view) => view.classList.remove("active"));
   $$(".nav-item").forEach((button) =>
     button.classList.toggle("active", button.dataset.view === viewId)
   );
 
-  if (!state.token && viewId !== "authView") {
+  if (!state.token && viewId !== "authView" && viewId !== "policyView") {
     els.authView.classList.add("active");
+    els.siteFooter.classList.add("hidden");
     return;
   }
 
-  $(`#${viewId}`).classList.add("active");
+  const target = $(`#${viewId}`) || els.authView;
+  target.classList.add("active");
+  els.siteFooter.classList.toggle("hidden", !state.token || !footerViews.has(viewId));
+}
+
+async function handleView(viewId) {
+  if (viewId === "adminSettingsView" && !canManageSiteSettings(state.user)) {
+    showView("coursesView");
+    return;
+  }
+
+  showView(viewId);
+  if (!state.token && viewId !== "policyView") return;
+
+  if (viewId === "discussionView") await loadDiscussions();
+  if (viewId === "wishlistView") await loadWishlist();
+  if (viewId === "levelUpView") renderLevelUp();
+  if (viewId === "adminSettingsView") await loadAdminSettings();
 }
 
 function flattenVideos() {
@@ -178,9 +382,12 @@ function hydrateUser(user) {
   els.profileEmail.value = user?.email || "";
   els.profilePhone.value = user?.phone || "";
   els.profileBio.value = user?.bio || "";
+  els.adminSettingsNav.classList.toggle("hidden", !canManageSiteSettings(user));
 }
 
 async function loadSession() {
+  await loadSiteSettings();
+
   if (!state.token) {
     showView("authView");
     return;
@@ -191,8 +398,9 @@ async function loadSession() {
     hydrateUser(me.user || me.data);
     await loadCourses();
     renderBilling();
+    const initialView = viewFromHash() || "coursesView";
     setAppPath("/learner");
-    showView("coursesView");
+    await handleView(initialView);
   } catch (error) {
     localStorage.removeItem("bv_token");
     state.token = "";
@@ -429,6 +637,126 @@ function renderBilling() {
     .join("");
 }
 
+async function loadDiscussions() {
+  els.discussionList.innerHTML = `<div class="discussion-row"><strong>Loading discussions</strong></div>`;
+  try {
+    const response = await api("/discussions?limit=10");
+    const posts = response.data || [];
+
+    if (!posts.length) {
+      els.discussionList.innerHTML = `<div class="discussion-row"><strong>No discussions yet</strong><small>New posts will appear here.</small></div>`;
+      return;
+    }
+
+    els.discussionList.innerHTML = posts
+      .map((post) => `
+        <article class="discussion-row">
+          <strong>${escapeHtml(post.title || post.courseName || "Discussion")}</strong>
+          <small>${escapeHtml(post.author?.name || "Learner")} - ${escapeHtml(post.courseName || "General")}</small>
+          <p>${escapeHtml(post.content || post.linkLabel || "").slice(0, 220)}</p>
+        </article>
+      `)
+      .join("");
+  } catch (error) {
+    els.discussionList.innerHTML = `<div class="discussion-row"><strong>${escapeHtml(error.message)}</strong></div>`;
+  }
+}
+
+async function loadWishlist() {
+  els.wishlistGrid.innerHTML = `<div class="course-card"><h2>Loading wishlist</h2></div>`;
+  try {
+    const response = await api("/wishlist");
+    const items = response.data?.items || [];
+
+    if (!items.length) {
+      els.wishlistGrid.innerHTML = `<div class="course-card"><h2>No wishlist courses</h2><p class="meta-line">Saved courses will appear here.</p></div>`;
+      return;
+    }
+
+    els.wishlistGrid.innerHTML = items
+      .map((item) => {
+        const course = item.course || {};
+        const image = course.thumbnail
+          ? `<img src="${escapeHtml(course.thumbnail)}" alt="${escapeHtml(course.title)}">`
+          : "";
+        return `
+          <article class="course-card">
+            ${image}
+            <h2>${escapeHtml(course.title || "Course")}</h2>
+            <p class="meta-line">
+              <span class="pill">${escapeHtml(course.level || "All Levels")}</span>
+              <span class="pill">${item.hasDiscount ? "Price Drop" : "Saved"}</span>
+            </p>
+            <button class="primary-button" type="button" data-open-course="${course._id}">Open Player</button>
+          </article>
+        `;
+      })
+      .join("");
+  } catch (error) {
+    els.wishlistGrid.innerHTML = `<div class="course-card"><h2>${escapeHtml(error.message)}</h2></div>`;
+  }
+}
+
+function renderLevelUp() {
+  const totalCourses = state.courses.length;
+  const videos = flattenVideos();
+  const completed = Object.values(state.progress || {}).filter((item) => item?.completed).length;
+  const activeCourse = state.courseData?.course?.title || "Open a course";
+  const percentage = Number(els.courseProgressLabel.textContent.replace("%", "")) || 0;
+
+  els.levelUpGrid.innerHTML = `
+    <article class="level-card">
+      <strong>Courses</strong>
+      <h2>${totalCourses}</h2>
+      <small>Active enrollments</small>
+    </article>
+    <article class="level-card">
+      <strong>Current Course</strong>
+      <h2>${percentage}%</h2>
+      <small>${escapeHtml(activeCourse)}</small>
+    </article>
+    <article class="level-card">
+      <strong>Lessons</strong>
+      <h2>${completed}/${videos.length || 0}</h2>
+      <small>Completed in the open course</small>
+    </article>
+  `;
+}
+
+async function showPolicy(type) {
+  const safeType = ["terms", "privacy", "refund"].includes(type) ? type : "terms";
+  const fallback = state.siteSettings.policies?.[safeType] || defaultSiteSettings.policies[safeType];
+
+  try {
+    const response = await api(`/site-settings/policies/${safeType}`);
+    const policy = response.data || fallback;
+    els.policyTitle.textContent = policy.title || fallback.title;
+    els.policyContent.innerHTML = renderPolicyText(policy.content || fallback.content);
+  } catch {
+    els.policyTitle.textContent = fallback.title;
+    els.policyContent.innerHTML = renderPolicyText(fallback.content);
+  }
+
+  showView("policyView");
+}
+
+function fillSettingsForm(settings) {
+  els.footerDescriptionInput.value = settings.footerDescription || "";
+  els.footerEmailsInput.value = (settings.emails || []).join("\n");
+  els.footerPhonesInput.value = (settings.phones || []).join("\n");
+  els.termsPolicyInput.value = settings.policies?.terms?.content || "";
+  els.privacyPolicyInput.value = settings.policies?.privacy?.content || "";
+  els.refundPolicyInput.value = settings.policies?.refund?.content || "";
+}
+
+async function loadAdminSettings() {
+  setStatus(els.settingsStatus, "");
+  const response = await api("/admin/site-settings");
+  state.siteSettings = normalizeSiteSettings(response.data);
+  renderFooter();
+  fillSettingsForm(state.siteSettings);
+}
+
 els.loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   setStatus(els.authStatus, "");
@@ -454,12 +782,52 @@ els.loginForm.addEventListener("submit", async (event) => {
   }
 });
 
+els.signupForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  setStatus(els.authStatus, "");
+
+  try {
+    await api("/auth/signup", {
+      method: "POST",
+      body: JSON.stringify({
+        name: els.signupName.value,
+        email: els.signupEmail.value,
+        phone: els.signupPhone.value,
+        password: els.signupPassword.value,
+        acceptedPolicies: els.acceptedPolicies.checked,
+      }),
+    });
+
+    $("#emailInput").value = els.signupEmail.value;
+    $("#passwordInput").value = "";
+    els.signupForm.reset();
+    els.signupForm.classList.add("hidden");
+    els.loginForm.classList.remove("hidden");
+    setStatus(els.authStatus, "Account created. Login to continue.", true);
+  } catch (error) {
+    setStatus(els.authStatus, error.message);
+  }
+});
+
+els.showSignupButton.addEventListener("click", () => {
+  setStatus(els.authStatus, "");
+  els.loginForm.classList.add("hidden");
+  els.signupForm.classList.remove("hidden");
+});
+
+els.showLoginButton.addEventListener("click", () => {
+  setStatus(els.authStatus, "");
+  els.signupForm.classList.add("hidden");
+  els.loginForm.classList.remove("hidden");
+});
+
 els.logoutButton.addEventListener("click", () => {
   localStorage.removeItem("bv_token");
   state.token = "";
   state.user = null;
   state.courses = [];
   state.courseData = null;
+  els.adminSettingsNav.classList.add("hidden");
   els.lessonVideo.pause();
   els.lessonVideo.removeAttribute("src");
   els.lessonVideo.load();
@@ -469,13 +837,29 @@ els.logoutButton.addEventListener("click", () => {
 });
 
 $$(".nav-item").forEach((button) => {
-  button.addEventListener("click", () => showView(button.dataset.view));
+  button.addEventListener("click", () => {
+    handleView(button.dataset.view).catch((error) => alert(error.message));
+  });
 });
 
 document.addEventListener("click", async (event) => {
+  const policyLink = event.target.closest("[data-policy-link]");
+  const footerViewLink = event.target.closest("[data-footer-view]");
   const courseButton = event.target.closest("[data-open-course]");
   const videoButton = event.target.closest("[data-video-index]");
   const materialButton = event.target.closest("[data-preview-material]");
+
+  if (policyLink) {
+    event.preventDefault();
+    await showPolicy(policyLink.dataset.policyLink);
+    return;
+  }
+
+  if (footerViewLink) {
+    event.preventDefault();
+    await handleView(footerViewLink.dataset.footerView);
+    return;
+  }
 
   if (courseButton) {
     await openCourse(courseButton.dataset.openCourse).catch((error) => alert(error.message));
@@ -611,6 +995,44 @@ els.passwordForm.addEventListener("submit", async (event) => {
     setStatus(els.accountStatus, "Password updated", true);
   } catch (error) {
     setStatus(els.accountStatus, error.message);
+  }
+});
+
+els.siteSettingsForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  setStatus(els.settingsStatus, "");
+
+  try {
+    const response = await api("/admin/site-settings", {
+      method: "PUT",
+      body: JSON.stringify({
+        brandName: state.siteSettings.brandName || "Bharath Vidya",
+        footerDescription: els.footerDescriptionInput.value,
+        emails: toLines(els.footerEmailsInput.value),
+        phones: toLines(els.footerPhonesInput.value),
+        policies: {
+          terms: {
+            title: "Terms and Conditions",
+            content: els.termsPolicyInput.value,
+          },
+          privacy: {
+            title: "Privacy Policy",
+            content: els.privacyPolicyInput.value,
+          },
+          refund: {
+            title: "Refund and Return Policy",
+            content: els.refundPolicyInput.value,
+          },
+        },
+      }),
+    });
+
+    state.siteSettings = normalizeSiteSettings(response.data);
+    renderFooter();
+    fillSettingsForm(state.siteSettings);
+    setStatus(els.settingsStatus, "Settings saved", true);
+  } catch (error) {
+    setStatus(els.settingsStatus, error.message);
   }
 });
 

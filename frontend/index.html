@@ -28,7 +28,11 @@
         <nav class="nav-list" aria-label="Primary">
           <button class="nav-item active" type="button" data-view="coursesView">My Courses</button>
           <button class="nav-item" type="button" data-view="playerView">Course Player</button>
+          <button class="nav-item" type="button" data-view="discussionView">Discussion</button>
+          <button class="nav-item" type="button" data-view="wishlistView">Wishlist</button>
+          <button class="nav-item" type="button" data-view="levelUpView">Level Up</button>
           <button class="nav-item" type="button" data-view="accountView">My Account</button>
+          <button class="nav-item hidden" id="adminSettingsNav" type="button" data-view="adminSettingsView">Site Settings</button>
         </nav>
 
         <nav class="site-links" aria-label="Website">
@@ -47,19 +51,53 @@
 
       <main class="main">
         <section class="view active" id="authView" aria-label="Login">
-          <form class="auth-panel" id="loginForm">
-            <h1>Welcome back</h1>
-            <label>
-              Email
-              <input id="emailInput" autocomplete="email" type="email" required>
-            </label>
-            <label>
-              Password
-              <input id="passwordInput" autocomplete="current-password" type="password" required>
-            </label>
-            <button class="primary-button" type="submit">Login</button>
+          <div class="auth-panel">
+            <form class="auth-form" id="loginForm">
+              <h1>Welcome back</h1>
+              <label>
+                Email
+                <input id="emailInput" autocomplete="email" type="email" required>
+              </label>
+              <label>
+                Password
+                <input id="passwordInput" autocomplete="current-password" type="password" required>
+              </label>
+              <button class="primary-button" type="submit">Login</button>
+              <button class="ghost-button" id="showSignupButton" type="button">Create Account</button>
+            </form>
+
+            <form class="auth-form hidden" id="signupForm">
+              <h1>Create account</h1>
+              <label>
+                Name
+                <input id="signupName" autocomplete="name" type="text" required>
+              </label>
+              <label>
+                Email
+                <input id="signupEmail" autocomplete="email" type="email" required>
+              </label>
+              <label>
+                Phone
+                <input id="signupPhone" autocomplete="tel" type="tel">
+              </label>
+              <label>
+                Password
+                <input id="signupPassword" autocomplete="new-password" type="password" minlength="6" required>
+              </label>
+              <label class="checkbox-row">
+                <input id="acceptedPolicies" type="checkbox" required>
+                <span>
+                  I agree to the
+                  <a href="/terms-and-conditions" data-policy-link="terms">Terms and Conditions</a>,
+                  <a href="/privacy-policy" data-policy-link="privacy">Privacy Policy</a>, and
+                  <a href="/refund-and-return-policy" data-policy-link="refund">Refund and Return Policy</a>.
+                </span>
+              </label>
+              <button class="primary-button" type="submit">Create Account</button>
+              <button class="ghost-button" id="showLoginButton" type="button">Back to Login</button>
+            </form>
             <p class="status-line" id="authStatus"></p>
-          </form>
+          </div>
         </section>
 
         <section class="view" id="coursesView" aria-label="My Courses">
@@ -142,6 +180,36 @@
           </div>
         </section>
 
+        <section class="view" id="discussionView" aria-label="Discussion">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Community</p>
+              <h1>Discussion</h1>
+            </div>
+          </div>
+          <div class="stack-list" id="discussionList"></div>
+        </section>
+
+        <section class="view" id="wishlistView" aria-label="Wishlist">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Saved</p>
+              <h1>Wishlist</h1>
+            </div>
+          </div>
+          <div class="course-grid" id="wishlistGrid"></div>
+        </section>
+
+        <section class="view" id="levelUpView" aria-label="Level Up">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Progress</p>
+              <h1>Level Up</h1>
+            </div>
+          </div>
+          <div class="level-grid" id="levelUpGrid"></div>
+        </section>
+
         <section class="view" id="accountView" aria-label="My Account">
           <div class="section-header">
             <div>
@@ -198,6 +266,58 @@
 
           <p class="status-line" id="accountStatus"></p>
         </section>
+
+        <section class="view" id="policyView" aria-label="Policy">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Policy</p>
+              <h1 id="policyTitle">Policy</h1>
+            </div>
+          </div>
+          <article class="policy-panel" id="policyContent"></article>
+        </section>
+
+        <section class="view" id="adminSettingsView" aria-label="Site Settings">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Admin</p>
+              <h1>Site Settings</h1>
+            </div>
+          </div>
+
+          <form class="settings-form" id="siteSettingsForm">
+            <label>
+              Footer Description
+              <textarea id="footerDescriptionInput" rows="4"></textarea>
+            </label>
+            <div class="form-grid">
+              <label>
+                Emails
+                <textarea id="footerEmailsInput" rows="5"></textarea>
+              </label>
+              <label>
+                Phone Numbers
+                <textarea id="footerPhonesInput" rows="5"></textarea>
+              </label>
+            </div>
+            <label>
+              Terms and Conditions
+              <textarea id="termsPolicyInput" rows="8"></textarea>
+            </label>
+            <label>
+              Privacy Policy
+              <textarea id="privacyPolicyInput" rows="8"></textarea>
+            </label>
+            <label>
+              Refund and Return Policy
+              <textarea id="refundPolicyInput" rows="8"></textarea>
+            </label>
+            <button class="primary-button" type="submit">Save Settings</button>
+            <p class="status-line" id="settingsStatus"></p>
+          </form>
+        </section>
+
+        <footer class="site-footer hidden" id="siteFooter" aria-label="Footer"></footer>
       </main>
     </div>
 

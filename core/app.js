@@ -99,6 +99,11 @@ import authRoutes       from "../modules/auth/routes/auth.routes.js";
 import courseRoutes     from "../modules/course/routes/course.routes.js";
 import adminRoutes      from "../modules/admin/routes/admin.routes.js";
 import instructorRoutes from "../modules/instructor/routes/instructor.routes.js";
+import siteSettingsRoutes from "../modules/site/routes/siteSettings.routes.js";
+import {
+  getSiteSettingsDocument,
+  POLICY_PATH_TO_TYPE,
+} from "../modules/site/models/siteSettings.model.js";
 
 /* ─────────────────────────────────────────
    📡 OPTIONAL ROUTES
@@ -242,6 +247,21 @@ const publicPages = [
   },
 ];
 
+const legalPages = [
+  {
+    path: "/terms-and-conditions",
+    title: "Terms and Conditions - Bharath Vidya",
+  },
+  {
+    path: "/refund-and-return-policy",
+    title: "Refund and Return Policy - Bharath Vidya",
+  },
+  {
+    path: "/privacy-policy",
+    title: "Privacy Policy - Bharath Vidya",
+  },
+];
+
 const escapeHtml = (value = "") =>
   String(value)
     .replaceAll("&", "&amp;")
@@ -251,6 +271,80 @@ const escapeHtml = (value = "") =>
     .replaceAll("'", "&#039;");
 
 const getCanonicalUrl = (pagePath) => `${SITE_URL}${pagePath === "/" ? "/" : pagePath}`;
+
+const renderTextBlocks = (text = "") => {
+  const blocks = String(text || "")
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  if (!blocks.length) {
+    return "<p>This content will be updated by the Bharath Vidya admin.</p>";
+  }
+
+  return blocks
+    .map((block) => `<p>${escapeHtml(block).replace(/\n/g, "<br>")}</p>`)
+    .join("");
+};
+
+const renderContentPage = ({
+  pagePath,
+  title,
+  description,
+  eyebrow,
+  heading,
+  bodyHtml,
+}) => {
+  const canonicalUrl = getCanonicalUrl(pagePath);
+  const nav = publicPages
+    .map((item) => `<a href="${item.path}"${item.path === pagePath ? ' aria-current="page"' : ""}>${escapeHtml(item.label)}</a>`)
+    .join("");
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${escapeHtml(title)}</title>
+    <meta name="description" content="${escapeHtml(description)}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="${canonicalUrl}">
+    <style>
+      :root { color-scheme: light; --ink: #172033; --muted: #5d6a7c; --line: #d9e1ea; --teal: #0f766e; --bg: #f6f8fb; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: var(--bg); }
+      header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px clamp(18px, 5vw, 72px); background: #fff; border-bottom: 1px solid var(--line); }
+      .brand { font-weight: 800; color: var(--ink); text-decoration: none; }
+      nav { display: flex; flex-wrap: wrap; gap: 12px; }
+      nav a { color: var(--muted); text-decoration: none; font-weight: 700; }
+      nav a[aria-current="page"], nav a:hover { color: var(--teal); }
+      main { min-height: calc(100vh - 77px); padding: 52px clamp(18px, 6vw, 96px); }
+      article { max-width: 860px; }
+      .eyebrow { color: var(--teal); font-size: 0.82rem; font-weight: 800; text-transform: uppercase; margin: 0 0 10px; }
+      h1 { margin: 0 0 22px; font-size: clamp(2rem, 6vw, 3.6rem); line-height: 1.08; letter-spacing: 0; }
+      .body { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: clamp(20px, 4vw, 34px); line-height: 1.75; color: var(--ink); }
+      .body p { margin: 0 0 16px; }
+      .body p:last-child { margin-bottom: 0; }
+      .contact-list { display: grid; gap: 10px; margin-top: 18px; }
+      .contact-list a, .contact-list span { color: var(--ink); font-weight: 800; }
+      @media (max-width: 680px) { header { align-items: flex-start; flex-direction: column; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="/">Bharath Vidya</a>
+      <nav aria-label="Primary">${nav}</nav>
+    </header>
+    <main>
+      <article>
+        <p class="eyebrow">${escapeHtml(eyebrow)}</p>
+        <h1>${escapeHtml(heading)}</h1>
+        <div class="body">${bodyHtml}</div>
+      </article>
+    </main>
+  </body>
+</html>`;
+};
 
 const renderPublicPage = (page) => {
   const canonicalUrl = getCanonicalUrl(page.path);
@@ -459,7 +553,7 @@ app.get("/robots.txt", (req, res) => {
 
 app.get("/sitemap.xml", (req, res) => {
   const lastModified = new Date().toISOString();
-  const urls = publicPages
+  const urls = [...publicPages, ...legalPages]
     .map((page) => `  <url>
     <loc>${getCanonicalUrl(page.path)}</loc>
     <lastmod>${lastModified}</lastmod>
@@ -480,7 +574,57 @@ const sendLearnerApp = (req, res) => {
 
 app.get(["/login", "/learner"], sendLearnerApp);
 
-for (const page of publicPages.filter((page) => page.path !== "/login")) {
+app.get("/contact", async (req, res, next) => {
+  try {
+    const settings = await getSiteSettingsDocument();
+    const emails = (settings.emails || [])
+      .map((email) => `<a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a>`)
+      .join("");
+    const phones = (settings.phones || [])
+      .map((phone) => `<a href="tel:${escapeHtml(phone)}">${escapeHtml(phone)}</a>`)
+      .join("");
+    const contactRows = [
+      emails ? `<div><strong>Email</strong><div class="contact-list">${emails}</div></div>` : "",
+      phones ? `<div><strong>Phone</strong><div class="contact-list">${phones}</div></div>` : "",
+    ].filter(Boolean).join("");
+
+    res.type("html").send(renderContentPage({
+      pagePath: "/contact",
+      title: "Contact - Bharath Vidya",
+      description: "Contact Bharath Vidya for course access, learner support, and account help.",
+      eyebrow: "Support",
+      heading: "Contact Us",
+      bodyHtml: `
+        <p>${escapeHtml(settings.footerDescription || "Contact Bharath Vidya for learner support.")}</p>
+        ${contactRows || "<p>Contact details will be updated by the Bharath Vidya admin.</p>"}
+      `,
+    }));
+  } catch (error) {
+    next(error);
+  }
+});
+
+for (const page of legalPages) {
+  app.get(page.path, async (req, res, next) => {
+    try {
+      const type = POLICY_PATH_TO_TYPE[page.path];
+      const settings = await getSiteSettingsDocument();
+      const policy = settings.policies?.[type] || {};
+      res.type("html").send(renderContentPage({
+        pagePath: page.path,
+        title: page.title,
+        description: `${policy.title || page.title} for Bharath Vidya learners.`,
+        eyebrow: "Policy",
+        heading: policy.title || page.title.replace(" - Bharath Vidya", ""),
+        bodyHtml: renderTextBlocks(policy.content),
+      }));
+    } catch (error) {
+      next(error);
+    }
+  });
+}
+
+for (const page of publicPages.filter((page) => page.path !== "/login" && page.path !== "/contact")) {
   app.get(page.path, (req, res) => {
     res.type("html").send(renderPublicPage(page));
   });
@@ -494,6 +638,7 @@ app.get("/api", (req, res) => {
 });
 
 app.use("/api/auth",          authRoutes);
+app.use("/api/site-settings", siteSettingsRoutes);
 app.use("/api/users",         userRoutes);
 app.use("/api/admin",         adminRoutes);
 app.use("/api/courses",       courseRoutes);

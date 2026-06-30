@@ -7,6 +7,7 @@ export const ADMIN_PAGE_KEYS = {
   CREATE_COURSE: "create-course",
   COURSES: "courses",
   DISCUSSION: "discussion",
+  SITE_SETTINGS: "site-settings",
   COUPONS: "coupons",
   NOTIFICATIONS: "notifications",
 };
@@ -59,6 +60,12 @@ export const ADMIN_PAGE_PERMISSIONS = [
     label: "Discussion",
     path: "/admin/discussion",
     description: "Community discussion page",
+  },
+  {
+    key: ADMIN_PAGE_KEYS.SITE_SETTINGS,
+    label: "Site Settings",
+    path: "/admin/site-settings",
+    description: "Footer contact details and policies",
   },
   {
     key: ADMIN_PAGE_KEYS.COUPONS,

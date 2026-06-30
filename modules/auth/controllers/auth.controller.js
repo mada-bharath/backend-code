@@ -28,12 +28,15 @@ const toSafeUser = (user) => {
   return safeUser;
 };
 
+const isAccepted = (value) =>
+  value === true || value === "true" || value === "on" || value === 1 || value === "1";
+
 /* =========================================================
    🔐 SIGNUP
 ========================================================= */
 export const signup = async (req, res, next) => {
   try {
-    let { name, email, phone, password } = req.body;
+    let { name, email, phone, password, acceptedPolicies } = req.body;
 
     name = name?.trim();
     email = email?.trim().toLowerCase();
@@ -54,6 +57,13 @@ export const signup = async (req, res, next) => {
       });
     }
 
+    if (!isAccepted(acceptedPolicies)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please agree to the Terms, Privacy Policy, and Refund Policy to create an account",
+      });
+    }
+
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
@@ -69,6 +79,13 @@ export const signup = async (req, res, next) => {
       phone: phone || "",
       password,
       role: "student",
+      legalConsent: {
+        acceptedPolicies: true,
+        termsAcceptedAt: new Date(),
+        privacyPolicyAcceptedAt: new Date(),
+        refundPolicyAcceptedAt: new Date(),
+        policyVersion: "1.0",
+      },
     });
 
     return res.status(201).json({

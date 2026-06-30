@@ -258,6 +258,30 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
 
+    legalConsent: {
+      acceptedPolicies: {
+        type:    Boolean,
+        default: false,
+      },
+      termsAcceptedAt: {
+        type:    Date,
+        default: null,
+      },
+      privacyPolicyAcceptedAt: {
+        type:    Date,
+        default: null,
+      },
+      refundPolicyAcceptedAt: {
+        type:    Date,
+        default: null,
+      },
+      policyVersion: {
+        type:    String,
+        default: "1.0",
+        trim:    true,
+      },
+    },
+
     /* ── Session tracking ── */
     lastLogin: {
       type:    Date,
